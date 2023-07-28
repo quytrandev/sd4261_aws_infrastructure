@@ -1,17 +1,21 @@
+data "aws_caller_identity" "current" {}
 provider "aws" {
   region = local.region
 }
 
 locals {
-  name   = "qt-practical-devops-eks-cluster"
+  name   = "${module.tags_dev.name}-eks"
   region = "us-west-2"
 
-  vpc_cidr = "10.123.0.0/16"
-  azs      = ["us-west-2a", "us-west-2b"]
+  ebs_csi_service_account_namespace = "kube-system"
+  ebs_csi_service_account_name = "ebs-csi-controller-sa"
 
-  public_subnets  = ["10.123.1.0/24", "10.123.2.0/24"]
-  private_subnets = ["10.123.3.0/24", "10.123.4.0/24"]
-  intra_subnets   = ["10.123.5.0/24", "10.123.6.0/24"]
+  vpc_cidr = "10.0.0.0/16"
+  azs      = ["us-west-2a", "us-west-2b","us-west-2c"]
+
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets =  ["10.0.3.0/24","10.0.4.0/24"]
+  intra_subnets   = ["10.0.5.0/24","10.0.6.0/24"]
 
   tags = {
     Name = local.name
@@ -29,8 +33,11 @@ module "vpc" {
   private_subnets = local.private_subnets
   public_subnets  = local.public_subnets
   intra_subnets   = local.intra_subnets
+  
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+  enable_dns_hostnames = true
 
-  enable_nat_gateway = true
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -47,7 +54,7 @@ module "eks" {
 
   cluster_name                   = local.name
   cluster_endpoint_public_access = true
-
+enable_irsa = true
   cluster_addons = {
     coredns = {
       most_recent = true
@@ -56,6 +63,9 @@ module "eks" {
       most_recent = true
     }
     vpc-cni = {
+      most_recent = true
+    }
+    aws-ebs-csi-driver = {
       most_recent = true
     }
   }
@@ -73,7 +83,7 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    ascode-cluster-wg = {
+    qt-cluster-wg = {
       min_size     = 1
       max_size     = 2
       desired_size = 1
@@ -89,3 +99,4 @@ module "eks" {
 
   tags = local.tags
 }
+
