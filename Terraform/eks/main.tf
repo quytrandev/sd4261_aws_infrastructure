@@ -7,15 +7,16 @@ locals {
   name   = "${module.tags_dev.name}-eks"
   region = "us-west-2"
 
-  ebs_csi_service_account_namespace = "kube-system"
+  service_account_namespace    = "kube-system"
   ebs_csi_service_account_name = "ebs-csi-controller-sa"
 
+
   vpc_cidr = "10.0.0.0/16"
-  azs      = ["us-west-2a", "us-west-2b","us-west-2c"]
+  azs      = ["us-west-2a", "us-west-2b", "us-west-2c"]
 
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets =  ["10.0.3.0/24","10.0.4.0/24"]
-  intra_subnets   = ["10.0.5.0/24","10.0.6.0/24"]
+  private_subnets = ["10.0.3.0/24", "10.0.4.0/24"]
+  intra_subnets   = ["10.0.5.0/24", "10.0.6.0/24"]
 
   tags = {
     Name = local.name
@@ -33,18 +34,20 @@ module "vpc" {
   private_subnets = local.private_subnets
   public_subnets  = local.public_subnets
   intra_subnets   = local.intra_subnets
-  
+
   enable_nat_gateway   = true
   single_nat_gateway   = true
   enable_dns_hostnames = true
 
 
   public_subnet_tags = {
-    "kubernetes.io/role/elb" = 1
+    "kubernetes.io/cluster/${local.name}" = "shared"
+    "kubernetes.io/role/elb"              = 1
   }
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb" = 1
+    "kubernetes.io/cluster/${local.name}" = "shared"
+    "kubernetes.io/role/internal-elb"     = 1
   }
 }
 
@@ -54,7 +57,7 @@ module "eks" {
 
   cluster_name                   = local.name
   cluster_endpoint_public_access = true
-enable_irsa = true
+  enable_irsa                    = true
   cluster_addons = {
     coredns = {
       most_recent = true
@@ -66,7 +69,7 @@ enable_irsa = true
       most_recent = true
     }
     aws-ebs-csi-driver = {
-      most_recent = true
+      most_recent              = true
       service_account_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.eks.cluster_name}-ebs-csi-controller"
     }
   }
@@ -83,6 +86,9 @@ enable_irsa = true
     attach_cluster_primary_security_group = true
   }
 
+  node_security_group_tags = {
+    "kubernetes.io/cluster/${local.name}" = null //tag null for security group to allow Load Balancer to be created since it won't create as EC2 got many tags
+  }
   eks_managed_node_groups = {
     qt-cluster-wg = {
       min_size     = 1
@@ -101,6 +107,7 @@ enable_irsa = true
   tags = local.tags
 }
 
+//Permission for EBS
 module "ebs_csi_controller_role" {
   source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
   version                       = "5.11.1"
@@ -108,7 +115,7 @@ module "ebs_csi_controller_role" {
   role_name                     = "${module.eks.cluster_name}-ebs-csi-controller"
   provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
   role_policy_arns              = [aws_iam_policy.ebs_csi_controller.arn]
-  oidc_fully_qualified_subjects = ["system:serviceaccount:${local.ebs_csi_service_account_namespace}:${local.ebs_csi_service_account_name}"]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:${local.service_account_namespace}:${local.ebs_csi_service_account_name}"]
 }
 
 resource "aws_iam_policy" "ebs_csi_controller" {
