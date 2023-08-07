@@ -1,39 +1,32 @@
 data "aws_caller_identity" "current" {}
 provider "aws" {
-  region = local.region
+  region = var.region
 }
 
 locals {
-  name   = "${module.tags_dev.name}-eks"
-  region = "us-west-2"
+  name = "${module.tags_dev.name}-eks"
 
   service_account_namespace    = "kube-system"
   ebs_csi_service_account_name = "ebs-csi-controller-sa"
-
-
-  vpc_cidr = "10.0.0.0/16"
-  azs      = ["us-west-2a", "us-west-2b", "us-west-2c"]
-
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets = ["10.0.3.0/24", "10.0.4.0/24"]
-  intra_subnets   = ["10.0.5.0/24", "10.0.6.0/24"]
 
   tags = {
     Name = local.name
   }
 }
-
+###########################################################################################
+#VPC for EC2, ECR and EKS
+###########################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 4.0"
 
   name = local.name
-  cidr = local.vpc_cidr
+  cidr = var.cidr_block
 
-  azs             = local.azs
-  private_subnets = local.private_subnets
-  public_subnets  = local.public_subnets
-  intra_subnets   = local.intra_subnets
+  azs             = var.azs
+  private_subnets = var.private_subnet_cidrs
+  public_subnets  = var.public_subnet_cidrs
+  intra_subnets   = var.intra_subnet_cidrs
 
   enable_nat_gateway   = true
   single_nat_gateway   = true
@@ -51,6 +44,54 @@ module "vpc" {
   }
 }
 
+###########################################################################################
+#EC2 Instance and supports
+###########################################################################################
+module "ec2_instance" {
+  source = "terraform-aws-modules/ec2-instance/aws"
+
+  name                        = "${module.tags_dev.name}-ec2"
+  ami                         = "ami-00970f57473724c10" //Amazon Linux 2023 AMI
+  instance_type               = "t2.micro"              //free tier
+  key_name                    = "jenkins-key"
+  monitoring                  = true
+  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  subnet_id                   = module.vpc.public_subnets[0] 
+  associate_public_ip_address = true
+}
+resource "aws_security_group" "ec2_sg" {
+  name   = "Security Group for EC2 under provisioning"
+  vpc_id = module.vpc.vpc_id
+
+ ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+###########################################################################################
+#Elastic Kubernetes Services
+###########################################################################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.15.1"
