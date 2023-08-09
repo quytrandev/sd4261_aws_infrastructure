@@ -52,7 +52,7 @@ module "ec2_instance" {
 
   name                        = "${module.tags_dev.name}-ec2"
   ami                         = "ami-00970f57473724c10" //Amazon Linux 2023 AMI
-  instance_type               = "t2.micro"              //free tier
+  instance_type               = "t3.large"              //Large tier instance to meet Docker specs requirements
   key_name                    = "jenkins-key"
   monitoring                  = true
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
