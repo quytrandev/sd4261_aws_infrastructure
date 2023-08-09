@@ -1,0 +1,33 @@
+pipeline {
+    environment {
+    registry = '430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr'
+    registryCredential = 'aws-credentials'
+    appName = "backend"
+    version = $BUILD_NUMBER
+    awsRegion = "us-west-2"
+    eksName = "qt-practical-devops-eks"
+    }
+    agent any
+    options {
+        skipStagesAfterUnstable()
+    }
+    stages {
+
+        stage ('Prepare Package') {
+        script {
+            writeFile file: '.ci/service/deployment.yml', text: libraryResource('deploy/eks/service/deployment.yml')
+            writeFile file: '.ci/service/service.yml', text: libraryResource('deploy/eks/service/service.yml')
+        }
+    }
+
+    stage ("Deploy Backend To K8S") {
+        docker.withRegistry("https://" + registry, "ecr:us-west-2:" + registryCredential) {
+            sh "export registry=${registry}; export appname=${appName}; export version=latest; \
+            envsubst < .ci/service/deployment.yml > deployment.yml; envsubst < .ci/service/service.yml > service.yml"
+            sh "aws eks --region ${awsRegion} update-kubeconfig --name ${eksName}"
+            sh "kubectl apply -f deployment.yml"
+            sh "kubectl apply -f service.yml"
+        }
+    }
+    }
+}
