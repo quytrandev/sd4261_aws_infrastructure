@@ -32,7 +32,7 @@ pipeline {
                     docker.withRegistry("https://" + registry, "ecr:us-west-2:" + registryCredential) 
                     {
                         sh "export registry=${registry}; export appname=${appName}; export version=latest; \
-                        envsubst < eks-template/deployment.yaml; envsubst < ks-template/service.yaml"
+                        envsubst < ../eks-template/deployment.yaml; envsubst < ../eks-template/service.yaml"
                         sh "aws eks --region ${awsRegion} update-kubeconfig --name ${eksName}"
                         sh "kubectl apply -f deployment.yaml"
                         sh "kubectl apply -f service.yaml"
