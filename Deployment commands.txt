@@ -1,0 +1,123 @@
+################################################
+#Provisioning deployment commands
+################################################
+
+==========================
+========Kubernetes========
+==========================
+//go to cluster context
+aws eks --region us-west-2 update-kubeconfig --name qt-practical-devops-eks					
+
+//create namespace for cluster name 'eks-ns'
+kubectl create ns eks-ns																	
+
+//change current context to new namespace
+kubectl config set-context --current --namespace eks-ns										
+
+//apply manifest file for mongodb
+kubectl apply -f mongodb.yaml																
+
+//apply manifest file for backend
+kubectl apply -f backend.yaml																
+
+//apply manifest file for frontend
+kubectl apply -f frontend.yaml																
+
+//forward port to service frontend 
+kubectl port-forward service/frontend 3000:3000
+
+//install ingress-nginx
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+helm upgrade --install ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --namespace ingress-nginx --create-namespace
+
+//get pods and service of ingress
+kubectl get pods -n ingress-nginx
+kubectl get services -n ingress-nginx
+
+//apply manifest file for ingress
+kubectl apply -f ingress.yml
+
+//check ingress status
+kubectl get ingress -o wide
+
+
+==========================
+=======Docker & ECR=======
+==========================
+
+//Use AWS CLI to access
+aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 430963847993.dkr.ecr.us-west-2.amazonaws.com
+
+//At root folder use these commands
+//Build frontend 
+docker build ./frontend -t frontend
+
+//Build backend
+docker build ./backend -t backend
+
+//Verify image
+docker image ls
+
+//Start application, this command will pull db image (mongodb) and start the app through port 3000
+docker-compose up
+
+//Tag images to push to ECR
+//front end
+docker tag frontend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend
+
+//backend
+docker tag backend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:backend
+
+//Push image to registry
+docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend-1
+kubectl rollout restart
+
+
+==========================
+======Jenkins CI/CD=======
+==========================
+//Install Jenkins
+Refer the following link: https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/
+
+sudo yum update –y
+
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/redhat-stable/jenkins.repo
+	
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+sudo yum upgrade
+
+sudo dnf install java-11-amazon-corretto -y
+
+sudo yum install jenkins -y
+
+sudo systemctl enable jenkins
+
+//Install git for EC2
+sudo yum install git -y
+
+//Intall Docker for EC2
+sudo yum install docker
+sudo systemctl start docker
+sudo usermod -a -G docker jenkins
+
+//Install supported plugins, add credentials for AWS and GitHub
+Refer the following link: https://sweetcode.io/how-to-deploy-an-application-to-kubernetes-cluster-using-jenkins-ci-cd-pipeline/
+https://octopus.com/blog/jenkins-docker-ecr
+https://plugins.jenkins.io/amazon-ecr/
+Plugins:
+- Kubernetes
+- Amazon EC2
+- Docker Pipeline
+- Purge History
+- Amazon ECR
+//Install plugin Amazon ECR, Docker pipeline, Kubernetes for Jenkins
+
+
+Credentials:
+- AWS credentials
+- GitHub credentials
+
+Github repo webhook
