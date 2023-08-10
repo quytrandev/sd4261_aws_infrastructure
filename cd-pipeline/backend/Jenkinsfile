@@ -24,22 +24,30 @@ pipeline {
             }
         }
 
-        stage ("Deploy Backend To K8S") {
+        stage ("Deploy Backend To K8S") 
+        {
             steps
             {
-                withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
-                script
+               withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: "aws-credentials",
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) 
                 {
-                    docker.withRegistry("https://" + registry, "ecr:us-west-2:" + registryCredential) 
+                    script
                     {
-                        sh "export registry=${registry}; export appname=${appName}; export version=latest; \
-                        envsubst < cd-pipeline/eks-template/deployment.yaml; envsubst < cd-pipeline/eks-template/service.yaml"
-                        sh "aws eks --region ${awsRegion} update-kubeconfig --name ${eksName}"
-                        sh "kubectl apply -f deployment.yaml"
-                        sh "kubectl apply -f service.yaml"
+                        docker.withRegistry("https://" + registry, "ecr:us-west-2:" + registryCredential) 
+                        {
+                            sh "export registry=${registry}; export appname=${appName}; export version=${version}; \
+                            envsubst < cd-pipeline/eks-template/deployment.yaml; envsubst < cd-pipeline/eks-template/service.yaml"
+                            sh "aws eks --region ${awsRegion} update-kubeconfig --name ${eksName}"
+                            sh "kubectl apply -f deployment.yaml"
+                            sh "kubectl apply -f service.yaml"
+                        }
                     }
                 }
-                }
+                
             }
         
         }
