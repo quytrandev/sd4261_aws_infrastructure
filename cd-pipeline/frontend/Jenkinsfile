@@ -27,6 +27,7 @@ pipeline {
         stage ("Deploy Frontend To K8S") {
             steps
             {
+                withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
                 script
                 {
                     docker.withRegistry("https://" + registry, "ecr:us-west-2:" + registryCredential) 
@@ -37,6 +38,7 @@ pipeline {
                         sh "kubectl apply -f deployment.yaml"
                         sh "kubectl apply -f service.yaml"
                     }
+                }
                 }
             }
         
