@@ -2,6 +2,7 @@
 #Provisioning deployment commands
 ################################################
 
+
 ==========================
 ========Kubernetes========
 ==========================
@@ -41,7 +42,7 @@ kubectl apply -f ingress.yml
 //check ingress status
 kubectl get ingress -o wide
 
-
+cd /var/lib/jenkins/frontend-cd-pipeline/cd-pipeline
 ==========================
 =======Docker & ECR=======
 ==========================
@@ -75,7 +76,7 @@ kubectl rollout restart
 
 
 ==========================
-======Jenkins CI/CD=======
+======Jenkins CI/CD======= 
 ==========================
 //Install Jenkins
 Refer the following link: https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/
@@ -95,6 +96,8 @@ sudo yum install jenkins -y
 
 sudo systemctl enable jenkins
 
+sudo systemctl start jenkins
+
 //Install git for EC2
 sudo yum install git -y
 
@@ -102,6 +105,20 @@ sudo yum install git -y
 sudo yum install docker
 sudo systemctl start docker
 sudo usermod -a -G docker jenkins
+
+//Install kubectl for EC2
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+kubectl version --client
+
+OPEN TRAFFIC FOR CLUSTER ADDITIONAL SECURITY GROUPS BEFORE APPLYING MANIFEST FILE
+
+//Install helm for EC2
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
 
 //Install supported plugins, add credentials for AWS and GitHub
 Refer the following link: https://sweetcode.io/how-to-deploy-an-application-to-kubernetes-cluster-using-jenkins-ci-cd-pipeline/
