@@ -24,7 +24,7 @@ pipeline {
             }
         }
 
-        stage ("Deploy Backend To K8S") {
+        stage ("Deploy Frontend To K8S") {
             steps
             {
                 script
@@ -32,7 +32,7 @@ pipeline {
                     docker.withRegistry("https://" + registry, "ecr:us-west-2:" + registryCredential) 
                     {
                         sh "export registry=${registry}; export appname=${appName}; export version=${version}; \
-                        envsubst < ../eks-template/deployment.yaml; envsubst < ../eks-template/service.yaml"
+                        envsubst < cd-pipeline/eks-template/deployment.yaml; envsubst < cd-pipeline/eks-template/service.yaml"
                         sh "aws eks --region ${awsRegion} update-kubeconfig --name ${eksName}"
                         sh "kubectl apply -f deployment.yaml"
                         sh "kubectl apply -f service.yaml"
