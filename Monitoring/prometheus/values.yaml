@@ -1,0 +1,19 @@
+prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: default
+    serviceMonitorSelector: {}
+# adds additional scrape configs to prometheus.yml
+# must be a string so you have to add a | after extraScrapeConfigs:
+# example adds prometheus-blackbox-exporter scrape config
+extraScrapeConfigs: |
+  - job_name: 'backend'
+    scrape_interval: 1s
+    metrics_path: /api/metrics
+    static_configs:
+    - targets: 
+      - backend.default.svc.cluster.local:3000 
