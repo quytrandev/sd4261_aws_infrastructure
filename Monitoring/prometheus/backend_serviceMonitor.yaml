@@ -10,7 +10,6 @@ spec:
     - default
   endpoints:
   - path: /api/metrics
-    port: metrics
     interval: 30s   
   selector:
     matchLabels:

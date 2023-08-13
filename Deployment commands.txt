@@ -132,9 +132,44 @@ Plugins:
 - Amazon ECR
 //Install plugin Amazon ECR, Docker pipeline, Kubernetes for Jenkins
 
-
 Credentials:
 - AWS credentials
 - GitHub credentials
 
 Github repo webhook
+
+==========================
+========Monitoring======== 
+==========================
+
+//Install CRD
+kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
+
+//Prometheus
+kubectl create namespace prometheus
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+
+helm install prometheus prometheus-community/prometheus --namespace prometheus --set alertmanager.persistentVolume.storageClass="gp2" --set server.persistentVolume.storageClass="gp2"
+
+helm install prometheus prometheus-community/prometheus --namespace prometheus -f ./prometheus/values.yaml --set alertmanager.persistentVolume.storageClass="gp2" --set server.persistentVolume.storageClass="gp2"
+
+kubectl port-forward deployment/prometheus-server 9090:9090 -n prometheus
+
+kubectl -n default apply -f ./prometheus/backend_serviceMonitor.yaml
+//Grafana
+kubectl create namespace grafana
+
+helm install grafana grafana/grafana --namespace grafana --set persistence.storageClassName="gp2" --set persistence.enabled=true --set adminPassword='Pa55w0rd' --values ./grafana/grafana.yaml --set service.type=LoadBalancer
+
+==========================
+=========Argo CD========== 
+==========================
+kubectl create namespace argocd
+
+kubectl apply -n argocd -f  https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+kubectl  -n argocd get secret argocd-initial-admin-secret -o jsonpath=”{.data.password}” 
+
+kubectl port-forward svc/argocd-server -n argocd 8082:443
