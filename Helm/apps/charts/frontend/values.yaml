@@ -1,0 +1,13 @@
+# Replica count for the frontend deployment
+replicaCount: 2
+
+# name of resources such as deployment, container, service
+name: frontend
+
+# Image repository and tag for the frontend container
+image:
+  repository: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr
+  tag: frontend-latest
+
+# Port for the frontend service
+servicePort: 3000
