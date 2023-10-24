@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: webserver-simple
-        image: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend-blue
+        image: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend-green
         ports:
         - name: http
           containerPort: 3000
