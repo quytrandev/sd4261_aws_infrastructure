@@ -189,14 +189,19 @@ kubectl port-forward svc/argocd-server -n argocd 8082:443
 kubectl create namespace argo-rollouts
 
 #Image updater
+//edit config map
+kubectl edit configmaps --namespace argocd argocd-image-updater-config
+
 //create secret
-kubectl -n argocd create secret docker-registry mycontainerregistry-secret --docker-server=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr --docker-username=AWS --docker-password=$(aws ecr get-login-password) -o yaml --dry-run=client | kubectl -n argocd apply -f -
+kubectl -n argocd create secret docker-registry mycontainerregistry-secret --docker-server=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend --docker-username=AWS --docker-password=$(aws ecr get-login-password --region us-west-2 --profile default) -o yaml --dry-run=client | kubectl -n argocd apply -f -
+
+kubectl -n argocd create secret generic git-creds --from-literal=username=<github username> --from-literal=password=<personal access token> 
 
 //restart
 kubectl -n argocd rollout restart deployment argocd-image-updater 
 
 //check log
-kubectl --namespace argocd logs --selector app.kubernetes.io/name=argocd-image-update
+kubectl --namespace argocd logs --selector app.kubernetes.io/name=argocd-image-updater --follow
 
 ==========================
 ========Helm Chart========
