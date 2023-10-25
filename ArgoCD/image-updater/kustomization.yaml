@@ -4,6 +4,8 @@ images:
 - name: eks-argo-frontend
   newName: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
   newTag: "1"
+- name: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
+  newTag: "4"
 resources:
 - _deployment.yaml
 - _service.yaml
