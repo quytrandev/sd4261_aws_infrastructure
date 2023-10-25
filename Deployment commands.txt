@@ -65,15 +65,26 @@ docker-compose up
 
 //Tag images to push to ECR
 //front end
+docker tag frontend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:1
 docker tag frontend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend
 
 //backend
+docker tag backend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-backend:1
+
 docker tag backend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:backend
 
 //Push image to registry
+docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:1
+docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-backend:1
+
 docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend-1
 kubectl rollout restart
 
+kubectl create secret docker-registry regcred \
+  --docker-server=<aws-account-id>.dkr.ecr.<aws-region>.amazonaws.com \
+  --docker-username=AWS \
+  --docker-password=$(aws ecr get-login-password) \
+  -o yaml
 
 ==========================
 ======Jenkins CI/CD======= 
@@ -170,6 +181,41 @@ kubectl create namespace argocd
 
 kubectl apply -n argocd -f  https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-kubectl  -n argocd get secret argocd-initial-admin-secret -o jsonpath=”{.data.password}” 
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=”{.data.password}” 
 
 kubectl port-forward svc/argocd-server -n argocd 8082:443
+
+//Rollout & Bluegreen
+kubectl create namespace argo-rollouts
+
+#Image updater
+//create secret
+kubectl -n argocd create secret docker-registry mycontainerregistry-secret --docker-server=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr --docker-username=AWS --docker-password=$(aws ecr get-login-password) -o yaml --dry-run=client | kubectl -n argocd apply -f -
+
+//restart
+kubectl -n argocd rollout restart deployment argocd-image-updater 
+
+//check log
+kubectl --namespace argocd logs --selector app.kubernetes.io/name=argocd-image-update
+
+==========================
+========Helm Chart========
+==========================
+
+//go to root folder
+cd apps
+
+//install dependencies
+helm dependency build
+
+//apply helm
+helm install my-release .
+
+//verify helm
+helm list
+
+//get all k8s pods
+kubectl get all
+
+
+

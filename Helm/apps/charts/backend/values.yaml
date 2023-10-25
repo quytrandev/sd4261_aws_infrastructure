@@ -6,8 +6,8 @@ name: backend
 
 # Image repository and tag for the backend container
 image:
-  repository: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr
-  tag: backend-latest
+  repository: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-backend
+  tag: 1
 
 # Port for the backend service
 servicePort: 3000

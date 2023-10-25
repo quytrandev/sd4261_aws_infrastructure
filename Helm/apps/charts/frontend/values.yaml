@@ -6,8 +6,8 @@ name: frontend
 
 # Image repository and tag for the frontend container
 image:
-  repository: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr
-  tag: frontend-latest
+  repository: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
+  tag: 1
 
 # Port for the frontend service
 servicePort: 3000
