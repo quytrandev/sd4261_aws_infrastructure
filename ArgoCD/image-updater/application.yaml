@@ -10,7 +10,7 @@ metadata:
     argocd-image-updater.argoproj.io/write-back-target: kustomization
     argocd-image-updater.argoproj.io/myalias.force-update: "true"
 spec:
-  project: frontend
+  project: default
   source:
     repoURL: https://github.com/quytrandev/sd4261_aws_infrastructure
     targetRevision: HEAD
