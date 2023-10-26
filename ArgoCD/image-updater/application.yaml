@@ -1,8 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: frontend-app
-  namespace: eks-ns
+  name: frontend
+  namespace: argocd
   annotations:
     argocd-image-updater.argoproj.io/image-list: myalias=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:*      
     argocd-image-updater.argoproj.io/git-branch: main      
