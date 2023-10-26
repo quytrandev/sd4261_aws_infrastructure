@@ -4,7 +4,5 @@ images:
 - name: frontend
   newName: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
   newTag: "1"
-- name: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
-  newTag: "5"
 resources:
-- ../../Helm/apps/charts/frontend/templates/deployment.yaml
+- ../../Helm/apps/charts/frontend/templates/
