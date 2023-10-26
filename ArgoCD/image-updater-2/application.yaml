@@ -1,8 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: frontend
-  namespace: argocd
+  name: frontend-app
+  namespace: eks-ns
   annotations:
     argocd-image-updater.argoproj.io/image-list: myalias=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:*      
     argocd-image-updater.argoproj.io/git-branch: main      
@@ -14,11 +14,11 @@ spec:
   source:
     repoURL: https://github.com/quytrandev/sd4261_aws_infrastructure
     targetRevision: HEAD
-    path: ./Helm/apps/charts
+    path: ./Helm/apps/charts/frontend
     helm:
-      releaseName: frontend
+      releaseName: frontend-app
       valueFiles:
-        - frontend/values.yaml
+        - values.yaml
     
   destination:
     server: https://kubernetes.default.svc
