@@ -1,8 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: frontend
-  newName: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
-  newTag: "1"
-resources:
-- ../../Helm/apps/charts/frontend/templates/
