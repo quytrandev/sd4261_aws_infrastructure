@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: myalias=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:*      
+    argocd-image-updater.argoproj.io/git-branch: main      
+    argocd-image-updater.argoproj.io/myalias.force-update: "true"
+    argocd-image-updater.argoproj.io/myalias.pull-secret: pullsecret:argocd/mycontainerregistry-secret
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/git-creds 
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/quytrandev/sd4261_aws_infrastructure
+    targetRevision: HEAD
+    path: ./Helm/apps/charts
+    helm:
+      releaseName: frontend
+      valueFiles:
+        - frontend/values.yaml
+    
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: eks-ns
+  syncPolicy:
+    automated:
+      selfHeal: true 
+      prune: false
