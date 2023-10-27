@@ -16,4 +16,4 @@ extraScrapeConfigs: |
     metrics_path: /api/metrics
     static_configs:
     - targets: 
-      - backend.default.svc.cluster.local:3000 
+      - backend.eks-ns.svc.cluster.local:3000 
