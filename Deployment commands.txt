@@ -152,28 +152,30 @@ Github repo webhook
 ==========================
 ========Monitoring======== 
 ==========================
-
-//Install CRD
-kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
+cd monitoring
 
 //Prometheus
 kubectl create namespace prometheus
+
+Change namespace to istio-system
+kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml		//install crd
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
 
 helm install prometheus prometheus-community/prometheus --namespace prometheus --set alertmanager.persistentVolume.storageClass="gp2" --set server.persistentVolume.storageClass="gp2"
 
-helm install prometheus prometheus-community/prometheus --namespace prometheus -f ./prometheus/values.yaml --set alertmanager.persistentVolume.storageClass="gp2" --set server.persistentVolume.storageClass="gp2"
+helm install prometheus prometheus-community/prometheus -f ./prometheus/values.yaml --set alertmanager.persistentVolume.storageClass="gp2" --set server.persistentVolume.storageClass="gp2"
 
 kubectl port-forward deployment/prometheus-server 9090:9090 -n prometheus
 
-kubectl -n default apply -f ./prometheus/backend_serviceMonitor.yaml
+kubectl apply -f ./prometheus/backend_serviceMonitor.yaml
 //Grafana
 kubectl create namespace grafana
 
-helm install grafana grafana/grafana --namespace grafana --set persistence.storageClassName="gp2" --set persistence.enabled=true --set adminPassword='Pa55w0rd' --values ./grafana/grafana.yaml --set service.type=LoadBalancer
+helm install grafana grafana/grafana --set persistence.storageClassName="gp2" --set persistence.enabled=true --set adminPassword='Pa55w0rd' --values ./grafana/grafana.yaml --set service.type=LoadBalancer
 
+kubectl get svc -n istio-system
 ==========================
 =========Argo CD========== 
 ==========================
@@ -222,5 +224,26 @@ helm list
 //get all k8s pods
 kubectl get all
 
+==========================
+==========Istio===========
+==========================
+//Istio install
+helm repo add istio https://istio-release.storage.googleapis.com/charts
 
+helm repo update
 
+helm install istio-base istio/base -n istio-system --create-namespace --set defaultRevision=default
+
+helm install istiod istio/istiod -n istio-system --wait
+
+helm ls -n istio-system
+
+kubectl get deployments -n istio-system
+
+//Create gateway
+kubectl apply -f ./istio/gateway.yaml
+
+kubectl apply -f ./istio/virtual-service.yaml
+
+//query metric
+sum(container_memory_working_set_bytes{namespace='eks-ns'}) by (pod)
