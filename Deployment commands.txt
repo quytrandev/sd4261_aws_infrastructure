@@ -66,18 +66,14 @@ docker-compose up
 //Tag images to push to ECR
 //front end
 docker tag frontend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:1
-docker tag frontend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend
 
 //backend
 docker tag backend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-backend:1
-
-docker tag backend:latest 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:backend
 
 //Push image to registry
 docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend:1
 docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-backend:1
 
-docker push 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr:frontend-1
 kubectl rollout restart
 
 kubectl create secret docker-registry regcred \
@@ -117,6 +113,10 @@ sudo yum install docker
 sudo systemctl start docker
 sudo usermod -a -G docker jenkins
 
+//Install Trivy
+sudo rpm -ivh https://github.com/aquasecurity/trivy/releases/download/v0.18.3/trivy_0.18.3_Linux-64bit.rpm
+
+
 //Install kubectl for EC2
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 
@@ -131,7 +131,12 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get
 chmod 700 get_helm.sh
 ./get_helm.sh
 
+
+
+
 //Install supported plugins, add credentials for AWS and GitHub
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
 Refer the following link: https://sweetcode.io/how-to-deploy-an-application-to-kubernetes-cluster-using-jenkins-ci-cd-pipeline/
 https://octopus.com/blog/jenkins-docker-ecr
 https://plugins.jenkins.io/amazon-ecr/
@@ -139,7 +144,7 @@ Plugins:
 - Kubernetes
 - Amazon EC2
 - Docker Pipeline
-- Purge History
+- Purge Job History
 - Amazon ECR
 //Install plugin Amazon ECR, Docker pipeline, Kubernetes for Jenkins
 
@@ -158,7 +163,9 @@ cd monitoring
 kubectl create namespace prometheus
 
 Change namespace to istio-system
-kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml		//install crd
+kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml		
+
+//install crd
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
@@ -191,8 +198,22 @@ kubectl port-forward svc/argocd-server -n argocd 8082:443
 kubectl create namespace argo-rollouts
 
 #Image updater
+//install
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
+
 //edit config map
 kubectl edit configmaps --namespace argocd argocd-image-updater-config
+
+//input this:
+data:
+  log.level: debug
+  registries.conf: |
+    registries:
+    - name: Elastic Container Registry
+      prefix: 430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
+      api_url: https://430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend
+      credentials: pullsecret:argocd/mycontainerregistry-secret
+      default: true
 
 //create secret
 kubectl -n argocd create secret docker-registry mycontainerregistry-secret --docker-server=430963847993.dkr.ecr.us-west-2.amazonaws.com/qt-practical-devops-ecr-frontend --docker-username=AWS --docker-password=$(aws ecr get-login-password --region us-west-2 --profile default) -o yaml --dry-run=client | kubectl -n argocd apply -f -

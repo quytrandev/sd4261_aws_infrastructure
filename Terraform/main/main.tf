@@ -47,48 +47,48 @@ module "vpc" {
 ###########################################################################################
 #EC2 Instance and supports
 ###########################################################################################
-# module "ec2_instance" {
-#   source = "terraform-aws-modules/ec2-instance/aws"
+module "ec2_instance" {
+  source = "terraform-aws-modules/ec2-instance/aws"
 
-#   name                        = "${module.tags_dev.name}-ec2"
-#   ami                         = "ami-00970f57473724c10" //Amazon Linux 2023 AMI
-#   instance_type               = "t3.large"              //Large tier instance to meet Docker specs requirements
-#   key_name                    = "jenkins-key"
-#   monitoring                  = true
-#   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
-#   subnet_id                   = module.vpc.public_subnets[0] 
-#   associate_public_ip_address = true
-# }
-# resource "aws_security_group" "ec2_sg" {
-#   name   = "Security Group for EC2 under provisioning"
-#   vpc_id = module.vpc.vpc_id
+  name                        = "${module.tags_dev.name}-ec2"
+  ami                         = "ami-00970f57473724c10" //Amazon Linux 2023 AMI
+  instance_type               = "t3.large"              //Large tier instance to meet Docker specs requirements
+  key_name                    = "jenkins-key"
+  monitoring                  = true
+  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  subnet_id                   = module.vpc.public_subnets[0] 
+  associate_public_ip_address = true
+}
+resource "aws_security_group" "ec2_sg" {
+  name   = "Security Group for EC2 under provisioning"
+  vpc_id = module.vpc.vpc_id
 
-#  ingress {
-#     from_port   = 8080
-#     to_port     = 8080
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#   ingress {
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#   ingress {
-#     from_port   = 22
-#     to_port     = 22
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
+ ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = -1
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 ###########################################################################################
 #ECR
 ###########################################################################################
